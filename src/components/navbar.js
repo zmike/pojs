@@ -3,7 +3,6 @@ import AppBar from "@material-ui/core/AppBar";
 import Tabs from "@material-ui/core/Tabs";
 import Tab from "@material-ui/core/Tab";
 import { Paper } from "@material-ui/core";
-import Typography from "@material-ui/core/Typography";
 import { Link, Route, BrowserRouter, Switch } from "react-router-dom";
 import Tree from "./tree"
 
@@ -13,11 +12,17 @@ class NavBar extends React.Component {
   };
 
   handleChange = (event, value) => {
-    this.setState({ value });
+    if (this.state.value !== value) {
+     console.log(this.state.value, value)
+      this.setState({ value });
+    }
   };
 
   handleChangeIndex = index => {
-    this.setState({ value: index });
+    if (this.state.value !== index) {
+     console.log(this.state.value, index)
+      this.setState({ value: index });
+    }
   };
 
   render() {
