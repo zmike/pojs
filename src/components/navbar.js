@@ -5,6 +5,7 @@ import Tab from "@material-ui/core/Tab";
 import { Paper } from "@material-ui/core";
 import Typography from "@material-ui/core/Typography";
 import { Link, Route, BrowserRouter, Switch } from "react-router-dom";
+import Tree from "./tree"
 
 class NavBar extends React.Component {
   state = {
@@ -43,13 +44,7 @@ class NavBar extends React.Component {
     );
   }
 }
-function Tree(theme) {
-  return (
-    <Paper>
-      <div>Treeeeee</div>
-    </Paper>
-  );
-}
+
 
 function Skills(theme) {
   return (
