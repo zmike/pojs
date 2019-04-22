@@ -13,14 +13,12 @@ class NavBar extends React.Component {
 
   handleChange = (event, value) => {
     if (this.state.value !== value) {
-     console.log(this.state.value, value)
       this.setState({ value });
     }
   };
 
   handleChangeIndex = index => {
     if (this.state.value !== index) {
-     console.log(this.state.value, index)
       this.setState({ value: index });
     }
   };
