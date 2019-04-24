@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from "react";
+import React, { Component } from "react";
 import NodeMap from "./nodemap"
 import TreeClass from "./treeclass"
 import TreeBackground from "./treebg"
@@ -39,7 +39,7 @@ class Tree extends Component {
 
           this.refs.treeBackground.setBackground(treedata.assets.Background1[0.3835], width, height);
           this.refs.treeClass.haveTreeData(treedata, ascendency);
-          this.refs.nodeMap.haveTreeData(treedata, ascendency);
+          this.refs.nodeMap.haveTreeData(treedata, ascendency, width, height);
 
           this.state = {
             treedata: treedata,

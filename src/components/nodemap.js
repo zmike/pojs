@@ -1,20 +1,20 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
+import React, { Component, Fragment } from 'react';
 import Node from './node';
+import CanvasMap from './canvasmap';
 
 class NodeMap extends Component {
   state = {
-    nodes: null
+    nodes: {},
+    treeData: {},
+    ascendencyData: {},
+    spriteMap: {},
+    width: 0,
+    height: 0,
   };
-  nodes = null;
 
-  shouldComponentUpdate() {
-     return !this.state.nodes;
-  }
-
-  buildNodeMap = (treeData, ascendencyData) => {
-
-    console.log("assembling class map");
+  buildNodeMap = (treeData, ascendencyData, width, height) => {
+    var state = this.state;
+    console.log("assembling class map", ascendencyData);
     var ascendNameMap = {};
     Object.values(ascendencyData).forEach(classObj => {
       classObj.classes[0] = {
@@ -33,11 +33,12 @@ class NodeMap extends Component {
     Object.entries(treeData.skillSprites).forEach(skillSprite => {
       var maxZoom = skillSprite[1][Object.values(skillSprite[1]).length - 1]
       var sheet;
+      
       if (!spriteSheets[maxZoom.filename]) {
         sheet = {
-          filename: "https://web.poecdn.com" + treeData.imageRoot + "build-gen/passive-skill-sprite/" + maxZoom.filename,
+          filename: treeData.imageRoot + "build-gen/passive-skill-sprite/" + maxZoom.filename,
         }
-        spriteSheets[maxZoom.filename] = sheet
+        spriteSheets[maxZoom.filename] = sheet;
       }
       sheet = spriteSheets[maxZoom.filename];
       Object.entries(maxZoom.coords).forEach(coords => {
@@ -46,14 +47,7 @@ class NodeMap extends Component {
         }
         spriteMap[coords[0]][skillSprite[0]] = {
           filename: sheet.filename,
-          width: coords[1].w,
-          height: coords[1].h,
-          vertices: [
-            coords[1].x / sheet.width, 
-            coords[1].y / sheet.height, 
-            (coords[1].x + coords[1].w) / sheet.width,
-            (coords[1].y + coords[1].h) / sheet.height
-          ]
+          coords: coords[1],
         }
       });
     });
@@ -110,8 +104,6 @@ class NodeMap extends Component {
     var sockets = {};
     var keystoneMap = {};
     Object.values(treeData.nodes).forEach(node => {
-      const noderef = "node" + node.id;
-
       if (node.spc[0]) {
          const classObj = ascendencyData[node.spc[0]];
          classObj.startNodeId = node.id
@@ -150,38 +142,63 @@ class NodeMap extends Component {
       node.x = group.x + Math.sin(node.angle) * dist
       node.y = group.y - Math.cos(node.angle) * dist
 
-      nodeMap[node.id] = <Node node={node} canvas={this.refs.canvas} ref={noderef}/>;
+      nodeMap[node.id] = node;
     });
+    console.log(Object.keys(nodeMap).length + " nodes");
 
-    this.nodes = nodeMap;
+    state.nodes = nodeMap;
+    state.treeData = treeData;
+    state.ascendencyData = ascendencyData;
+    state.width = width;
+    state.height = height;
+    this.setState(state);
   }
 
-  componentDidUpdate() {
-     if (this.nodes !== this.state.nodes) {
-       this.setState({
-         nodes: this.nodes,
-       });
-     }
+  haveTreeData = (treeData, ascendency, width, height) => {
+    this.buildNodeMap(treeData, ascendency, width, height);
   }
 
-  haveTreeData = (treeData, ascendency) => {
-    this.buildNodeMap(treeData, ascendency);
+  getSpriteSheet = (name) => {
+     return this.refs[name];
+  }
+
+  getCanvasMap = () => {
+     return this.refs.NodeMapCanvasMap;
   }
 
   render() {
     console.log("nodemap render");
-    return (null
-    );
+    if (this.state.treeData && Object.entries(this.state.nodes).length) {
+      var nodes = [];
+      var sprites = [];
+      var map = {};
+
+      Object.values(this.state.treeData.skillSprites).forEach(spriteSheet => {
+        var maxZoom = spriteSheet[Object.values(spriteSheet).length - 1];
+        var filename = this.state.treeData.imageRoot + "build-gen/passive-skill-sprite/" + maxZoom.filename;
+        if (!map[filename]) {
+          map[filename] = sprites.push(<img alt="" src={filename} style={{display: 'none'}} ref={filename} key={filename} />);
+        }
+      });
+
+      Object.entries(this.state.nodes).forEach(node => {
+         nodes.push(<Node node={node[1]} treeData={this.state.treeData} ref={node[0]} key={node[0]} getCanvasMap={this.getCanvasMap} getSpriteSheet={this.getSpriteSheet} />);
+      });
+      //var node = Object.entries(this.state.nodes)[1];
+      //console.log(node);
+      //nodes.push(<Node node={node[1]} treeData={this.state.treeData} ref={node[0]} key={node[0]} getCanvasMap={this.getCanvasMap} getSpriteSheet={this.getSpriteSheet} />);
+      
+      return(
+       <Fragment>
+        {sprites}
+        <CanvasMap width={this.state.width} height={this.state.height} name="NodeMapCanvasMap" ref="NodeMapCanvasMap" />
+        {nodes}
+       </Fragment>
+      );
+    } else {
+      return(null);
+    }
   }
 }
-
-NodeMap.propTypes = {
-  getTreeData: PropTypes.func,
-  getAscendencyData: PropTypes.func,
-};
-NodeMap.defaultProps = {
-  getTreeData: null,
-  getAscendencyData: null,
-};
 
 export default NodeMap;

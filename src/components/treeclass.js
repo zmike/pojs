@@ -43,11 +43,12 @@ class TreeClass extends Component {
           continue;
       }
 
-      const visibility = i === this.state.curClassId ? 'inline' : 'none';
-      const left = pos[0] - treeData.min_x;
-      const top = pos[1] - treeData.min_y;
+      //const visibility = i === this.state.curClassId ? 'block' : 'none';
+      const visibility = 'block';
+      const left = pos[0];
+      const top = pos[1];
       const key = "classArt" + i;
-      const art = <AssetImage key={key} asset={asset} left={left} top={top} visibility={visibility} />;
+      const art = <AssetImage key={key} img={asset} left={left} top={top} treeData={treeData} visibility={visibility} zIndex="0" />;
 
       classArt.push(art);
     }
@@ -61,9 +62,9 @@ class TreeClass extends Component {
 
     console.log("TreeClass render");
     return(
-      <>
+      <Fragment>
         {this.state.classArt}
-      </>
+      </Fragment>
     );
   }
 }

@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+//import AssetImage from "./assetimage";
 
 class Node extends Component {
   constructor(props) {
@@ -97,14 +98,126 @@ class Node extends Component {
       }
     }
 */
+    state.overlay = null;
+    state.alloc = false;
+    state.base = null;
+    state.z = 0;
     this.state = state;
   }
-  shouldComponentUpdate() {
-     return false;
+
+  nodeUpdate = () => {
+    var state = this.state;
+    var base = null;
+    var overlay = null;
+    var z = 2;
+
+    switch (this.state.type) {
+    case "ClassStart":
+      overlay = this.state.alloc ? this.props.node.startArt : "PSStartNodeBackgroundInactive"
+      break;
+    case "AscendClassStart":
+      overlay = "PassiveSkillScreenAscendancyMiddle"
+      break;
+    case "Mastery":
+      // This is the icon that appears in the center of many groups
+      z = 1;
+      base = this.props.node.sprites.mastery;
+      break;
+    default:
+      var allocString;
+      if (this.state.alloc) {
+      //if (self.showHeatMap || node.alloc || node === hoverNode || (self.traceMode && node === self.tracePath[#self.tracePath]) {
+         // Show node as allocatedif (it is being hovered over
+         // Alsoif (the heat map is turned on (makes the nodes more visible)
+         allocString = "alloc"
+       //} else if (hoverPath && hoverPath[node]) {
+         //allocString = "path"
+      } else {
+        allocString = "unalloc"
+      }
+      if (this.state.type === "Socket") {
+         // Node is a jewel socket, retrieve the socketed jewel (if present) so we can display the correct art
+         base = this.props.treeData.assets[this.props.node.overlay[allocString]];
+         //var socket, jewel = build.itemsTab:GetSocketAndJewelForNodeID(nodeId)
+         //if (this.state.alloc && jewel) {
+           //if (jewel.baseName === "Crimson Jewel") {
+              //overlay = "JewelSocketActiveRed"
+            //} else if (jewel.baseName === "Viridian Jewel") {
+              //overlay = "JewelSocketActiveGreen"
+            //} else if (jewel.baseName === "Cobalt Jewel") {
+              //overlay = "JewelSocketActiveBlue"
+            //} else if (jewel.baseName === "Prismatic Jewel") {
+              //overlay = "JewelSocketActivePrismatic"
+            //} else if (jewel.baseName:match("Eye Jewel$")) {
+              //overlay = "JewelSocketActiveAbyss"
+            //}
+          //}
+       } else {
+         // Normal node (includes keystones && notables)
+         base = this.props.node.sprites[this.state.type.toLowerCase() + (this.state.alloc ? "Active" : "Inactive")];
+         overlay = this.props.node.overlay[allocString + (this.props.node.ascendancyName ? "Ascend" : "")]
+       }
+       break;
+    }
+
+    state.base = base;
+    state.overlay = overlay;
+    state.z = z;
+    this.setState(state);
   }
+  
+  componentDidMount() {
+    this.nodeUpdate();
+  }
+
+  componentDidUpdate() {
+    if (!this.state.base) {
+      return;
+    }
+    var getCanvases = this.props.getCanvasMap().getCanvases;
+    const base = this.state.base;
+    const xCoord = Math.round((this.props.node.x - base.coords.w)) - this.props.treeData.min_x;
+    const yCoord = Math.round((this.props.node.y - base.coords.h)) - this.props.treeData.min_y;
+    var canvases = getCanvases(xCoord, yCoord,
+      this.state.base.coords.w * 2, this.state.base.coords.h * 2);
+    var that = this;
+    if (!canvases.length) {
+      console.error(xCoord, yCoord,
+      this.state.base.coords.w * 2, this.state.base.coords.h * 2);
+    }
+    canvases.forEach(function(canvas) {
+      const x = parseInt(canvas.style.left, 10);
+      const y = parseInt(canvas.style.top, 10);
+
+      const ctx = canvas.getContext("2d")
+      const img = that.props.getSpriteSheet(base.filename);
+      ctx.drawImage(img,
+        base.coords.x,
+        base.coords.y,
+        base.coords.w,
+        base.coords.h,
+        xCoord - x,
+        yCoord - y,
+        2 * base.coords.w,
+        2 * base.coords.h
+      );
+    });
+  }
+
   render() {
     return(null);
   }
+  //render() {
+    //if (this.state.base) {
+      //return(
+        //<AssetImage asset={this.state.base} left={this.props.node.x}
+          //top={this.props.node.y} visibility="inline" zIndex={this.state.z}
+          //treeData={this.props.treeData} />
+      //);
+    //} else {
+      //return(null);
+    //}
+  //}
 }
 
 export default Node;
