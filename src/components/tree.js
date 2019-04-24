@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import NodeMap from "./nodemap"
+import GroupMap from "./groupmap"
 import TreeClass from "./treeclass"
 import TreeBackground from "./treebg"
 
@@ -12,6 +13,7 @@ class Tree extends Component {
       width: 0,
       height: 0,
     };
+    this.scale = 1.0;
     console.log("parsing tree data");
     fetch("treedata.txt")
       .then(response => {
@@ -39,6 +41,7 @@ class Tree extends Component {
 
           this.refs.treeBackground.setBackground(treedata.assets.Background1[0.3835], width, height);
           this.refs.treeClass.haveTreeData(treedata, ascendency);
+          this.refs.groupMap.haveTreeData(treedata, ascendency, width, height);
           this.refs.nodeMap.haveTreeData(treedata, ascendency, width, height);
 
           this.state = {
@@ -51,12 +54,37 @@ class Tree extends Component {
       })
   }
 
+  handleWheel = (event) => {
+    if (event.getModifierState("Control")) {
+       event.preventDefault();
+
+       var style = this.refs.canvasdiv.style;
+       var scale = this.scale;
+       if (event.deltaY < 0) {
+         // Zoom in
+         scale += 0.05;
+       } else {
+         // Zoom out
+         scale -= 0.05;
+       }
+       // Restrict scale
+       scale = Math.min(Math.max(.05, scale), 2);
+       scale = Math.round(scale * 100) / 100;
+       this.scale = scale;
+    }
+  }
+
+  handleLoad = () => {
+     this.refs.canvasdiv.addEventListener("wheel", this.handleWheel, {passive: false});
+  }
+
   render() {
     console.log("tree render");
     return (
-     <div ref="canvasdiv" style={{position: "absolute"}}>
+     <div ref="canvasdiv" style={{position: "absolute"}} onLoad={this.handleLoad}>
       <TreeBackground ref="treeBackground" style={{position: "absolute"}} />
       <TreeClass ref="treeClass" curClassId="1" style={{position: "absolute"}}/>
+      <GroupMap ref="groupMap" style={{position: "absolute"}}/>
       <NodeMap ref="nodeMap" style={{position: "absolute"}}/>
      </div>
     );

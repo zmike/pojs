@@ -17,10 +17,9 @@ class TreeBackground extends Component {
   }
 
   drawBackground(canvas) {
-     const ctx = canvas.getContext("2d", { alpha: false })
+     const ctx = canvas.getContext("2d");
      const Background1 = this.refs.Background1
      var pat = ctx.createPattern(Background1, "repeat");
-     console.log("tiling "+Background1.width+"x"+Background1.height+" over "+canvas.width+"x"+canvas.height);
      ctx.rect(0, 0, canvas.width, canvas.height);
      ctx.fillStyle = pat;
      ctx.fill();
@@ -50,7 +49,7 @@ class TreeBackground extends Component {
   render() {
     console.log("TreeBackground render");
     var canvasMap = this.state.Background1 ?
-      <CanvasMap width={this.state.width} height={this.state.height} name="TreeBackground" ref="TreeBackgroundCanvasMap" />
+      <CanvasMap width={this.state.width + 1000} height={this.state.height + 1000} name="TreeBackground" ref="TreeBackgroundCanvasMap" />
       :
       null;
     return (

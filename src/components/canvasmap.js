@@ -19,8 +19,9 @@ class CanvasMap extends Component {
           left: (this.state.tileW * i),
           top: (this.state.tileH * j),
           border: "none",
+          WebkitBackfaceVisibility: "hidden",
         };
-        canvases.push(<canvas ref={ref} key={ref} width={this.state.tileW} height={this.state.tileH} style={style} />);
+        canvases.push(<canvas ref={ref} key={ref} width={this.state.tileW} height={this.state.tileH} style={style}/>);
       }
     }
     return canvases;

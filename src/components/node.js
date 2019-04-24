@@ -176,8 +176,8 @@ class Node extends Component {
     }
     var getCanvases = this.props.getCanvasMap().getCanvases;
     const base = this.state.base;
-    const xCoord = Math.round((this.props.node.x - base.coords.w)) - this.props.treeData.min_x;
-    const yCoord = Math.round((this.props.node.y - base.coords.h)) - this.props.treeData.min_y;
+    const xCoord = Math.round((this.props.node.x - base.coords.w)) - this.props.treeData.min_x + 500;
+    const yCoord = Math.round((this.props.node.y - base.coords.h)) - this.props.treeData.min_y + 500;
     var canvases = getCanvases(xCoord, yCoord,
       this.state.base.coords.w * 2, this.state.base.coords.h * 2);
     var that = this;

@@ -191,7 +191,7 @@ class NodeMap extends Component {
       return(
        <Fragment>
         {sprites}
-        <CanvasMap width={this.state.width} height={this.state.height} name="NodeMapCanvasMap" ref="NodeMapCanvasMap" />
+        <CanvasMap width={this.state.width + 1000} height={this.state.height + 1000} name="NodeMapCanvasMap" ref="NodeMapCanvasMap" />
         {nodes}
        </Fragment>
       );
