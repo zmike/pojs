@@ -5,16 +5,42 @@ import TreeClass from "./treeclass"
 import TreeBackground from "./treebg"
 
 class Tree extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      treedata: null,
-      ascendency: null,
-      width: 0,
-      height: 0,
-    };
-    this.scale = 1.0;
+  state = {
+    treedata: null,
+    ascendency: null,
+    width: 0,
+    height: 0,
+  };
+
+  handleWheel = (event) => {
+    if (event.getModifierState("Control")) {
+       event.preventDefault();
+
+       var style = this.refs.canvasdiv.style;
+       var scale = this.scale;
+       var incr = scale >= 1.0 ? 0.1 : 0.02;
+       if (event.deltaY < 0) {
+         // Zoom in
+         scale += incr;
+       } else {
+         // Zoom out
+         scale -= incr;
+       }
+       // Restrict scale
+       scale = Math.min(Math.max(.05, scale), 2);
+       scale = Math.round(scale * 100) / 100;
+       this.scale = scale;
+       style.transform = "scale(" + this.scale + ")";
+    }
+  }
+
+  handleLoad = () => {
+     this.refs.canvasdiv.addEventListener("wheel", this.handleWheel, {passive: false});
+  }
+
+  componentDidMount() {
     console.log("parsing tree data");
+    this.scale = 0.1;
     fetch("treedata.txt")
       .then(response => {
         response.text().then(data => {
@@ -39,53 +65,37 @@ class Tree extends Component {
           const width = treedata.max_x - treedata.min_x;
           const height = treedata.max_y - treedata.min_y;
 
-          this.refs.treeBackground.setBackground(treedata.assets.Background1[0.3835], width, height);
-          this.refs.treeClass.haveTreeData(treedata, ascendency);
-          this.refs.groupMap.haveTreeData(treedata, ascendency, width, height);
-          this.refs.nodeMap.haveTreeData(treedata, ascendency, width, height);
-
-          this.state = {
+          this.setState({
             treedata: treedata,
             ascendency: ascendency,
             width: width,
             height: height,
-          };
-        })
-      })
-  }
-
-  handleWheel = (event) => {
-    if (event.getModifierState("Control")) {
-       event.preventDefault();
-
-       var style = this.refs.canvasdiv.style;
-       var scale = this.scale;
-       if (event.deltaY < 0) {
-         // Zoom in
-         scale += 0.05;
-       } else {
-         // Zoom out
-         scale -= 0.05;
-       }
-       // Restrict scale
-       scale = Math.min(Math.max(.05, scale), 2);
-       scale = Math.round(scale * 100) / 100;
-       this.scale = scale;
-    }
-  }
-
-  handleLoad = () => {
-     this.refs.canvasdiv.addEventListener("wheel", this.handleWheel, {passive: false});
+          });
+        });
+      });
   }
 
   render() {
+    if (!this.state.treedata) {
+      return(null);
+    }
+
     console.log("tree render");
     return (
-     <div ref="canvasdiv" style={{position: "absolute"}} onLoad={this.handleLoad}>
-      <TreeBackground ref="treeBackground" style={{position: "absolute"}} />
-      <TreeClass ref="treeClass" curClassId="1" style={{position: "absolute"}}/>
-      <GroupMap ref="groupMap" style={{position: "absolute"}}/>
-      <NodeMap ref="nodeMap" style={{position: "absolute"}}/>
+     <div ref="canvasdiv" style={{position: "absolute", transform: "scale(" + this.scale + ")"}} onLoad={this.handleLoad}>
+      <TreeBackground ref="treeBackground" style={{position: "absolute"}}
+        Background1={this.state.treedata.assets.Background1[0.3835]}
+        width={this.state.width} height={this.state.height}/>
+      {/*
+      <TreeClass ref="treeClass" curClassId="1" style={{position: "absolute"}}
+        treeData={this.state.treedata} ascendencyData={this.state.ascendency}/>
+        */}
+      <GroupMap ref="groupMap" style={{position: "absolute"}}
+        treeData={this.state.treedata} ascendencyData={this.state.ascendency}
+        width={this.state.width} height={this.state.height}/>
+      <NodeMap ref="nodeMap" style={{position: "absolute"}}
+        treeData={this.state.treedata} ascendencyData={this.state.ascendency}
+        width={this.state.width} height={this.state.height}/>
      </div>
     );
   }

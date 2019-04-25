@@ -7,7 +7,7 @@ class TreeClass extends Component {
     classArt: [],
   }
 
-  haveTreeData = (treeData, ascendencyData) => {
+  componentDidMount() {
     let classArt = [];
     // Hack to draw class background art, the position data doesn't seem to be in the tree JSON yet
     for (var i = 1; i < 7; i++) {
@@ -17,27 +17,27 @@ class TreeClass extends Component {
       switch (i) {
         case 1:
           pos = [-2750, 1600]
-          asset = treeData.assets.BackgroundStr;
+          asset = this.props.treeData.assets.BackgroundStr;
           break;
         case 2:
           pos = [2550, 1600]
-          asset = treeData.assets.BackgroundDex;
+          asset = this.props.treeData.assets.BackgroundDex;
           break;
         case 3:
           pos = [-250, -2200]
-          asset = treeData.assets.BackgroundInt;
+          asset = this.props.treeData.assets.BackgroundInt;
           break;
         case 4:
           pos = [-150, 2350]
-          asset = treeData.assets.BackgroundStrDex;
+          asset = this.props.treeData.assets.BackgroundStrDex;
           break;
         case 5:
           pos = [-2100, -1500]
-          asset = treeData.assets.BackgroundStrInt;
+          asset = this.props.treeData.assets.BackgroundStrInt;
           break;
         case 6:
           pos = [2350, -1950]
-          asset = treeData.assets.BackgroundDexInt;
+          asset = this.props.treeData.assets.BackgroundDexInt;
           break;
         default:
           continue;
@@ -48,7 +48,7 @@ class TreeClass extends Component {
       const left = pos[0];
       const top = pos[1];
       const key = "classArt" + i;
-      const art = <AssetImage key={key} img={asset} left={left} top={top} treeData={treeData} visibility={visibility} zIndex="0" />;
+      const art = <AssetImage key={key} img={asset} left={left} top={top} treeData={this.props.treeData} visibility={visibility} zIndex="0" />;
 
       classArt.push(art);
     }

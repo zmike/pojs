@@ -1,22 +1,20 @@
 import React, { Component, Fragment } from 'react';
 import Node from './node';
 import CanvasMap from './canvasmap';
+import {getCanvasKey, mapObject} from '../utils';
 
 class NodeMap extends Component {
   state = {
     nodes: {},
-    treeData: {},
-    ascendencyData: {},
-    spriteMap: {},
-    width: 0,
-    height: 0,
+    spriteSheetCount: 0,
+    spriteSheetLoaded: 0,
   };
 
-  buildNodeMap = (treeData, ascendencyData, width, height) => {
+  buildNodeMap() {
     var state = this.state;
-    console.log("assembling class map", ascendencyData);
+    console.log("assembling class map", this.props.ascendencyData);
     var ascendNameMap = {};
-    Object.values(ascendencyData).forEach(classObj => {
+    Object.values(this.props.ascendencyData).forEach(classObj => {
       classObj.classes[0] = {
         name: "None"
       };
@@ -30,13 +28,13 @@ class NodeMap extends Component {
 
     var spriteMap = { }
     var spriteSheets = { }
-    Object.entries(treeData.skillSprites).forEach(skillSprite => {
+    Object.entries(this.props.treeData.skillSprites).forEach(skillSprite => {
       var maxZoom = skillSprite[1][Object.values(skillSprite[1]).length - 1]
       var sheet;
       
       if (!spriteSheets[maxZoom.filename]) {
         sheet = {
-          filename: treeData.imageRoot + "build-gen/passive-skill-sprite/" + maxZoom.filename,
+          filename: this.props.treeData.imageRoot + "build-gen/passive-skill-sprite/" + maxZoom.filename,
         }
         spriteSheets[maxZoom.filename] = sheet;
       }
@@ -103,9 +101,9 @@ class NodeMap extends Component {
     var nodeMap = {};
     var sockets = {};
     var keystoneMap = {};
-    Object.values(treeData.nodes).forEach(node => {
+    Object.values(this.props.treeData.nodes).forEach(node => {
       if (node.spc[0]) {
-         const classObj = ascendencyData[node.spc[0]];
+         const classObj = this.props.ascendencyData[node.spc[0]];
          classObj.startNodeId = node.id
          node.startArt = classArt[node.spc[0] - 1]
       } else if (node.isAscendancyStart) {
@@ -129,7 +127,7 @@ class NodeMap extends Component {
          node.overlay = {}
       }
 
-      var group = treeData.groups[node.g]
+      var group = this.props.treeData.groups[node.g]
       group.ascendancyName = node.ascendancyName
       if (node.isAscendancyStart) {
         group.isAscendancyStart = true
@@ -147,15 +145,13 @@ class NodeMap extends Component {
     console.log(Object.keys(nodeMap).length + " nodes");
 
     state.nodes = nodeMap;
-    state.treeData = treeData;
-    state.ascendencyData = ascendencyData;
-    state.width = width;
-    state.height = height;
+    state.spriteSheetCount = Object.values(spriteSheets).length;
+    console.log("detected " + state.spriteSheetCount + " spritesheets");
     this.setState(state);
   }
 
-  haveTreeData = (treeData, ascendency, width, height) => {
-    this.buildNodeMap(treeData, ascendency, width, height);
+  componentDidMount() {
+    this.buildNodeMap();
   }
 
   getSpriteSheet = (name) => {
@@ -166,38 +162,128 @@ class NodeMap extends Component {
      return this.refs.NodeMapCanvasMap;
   }
 
+  drawNodeMap() {
+    console.log("graphing nodemap");
+    const canvases = this.refs.NodeMapCanvasMap.getAllCanvases();
+    const tileW = canvases[0].width;
+    const tileH = canvases[0].height;
+    var canvasMap = {};
+    var groupMap = {};
+    var i = 0, j = 0;
+    canvasMap[i] = {};
+    canvases.forEach(canvas => {
+      canvasMap[i][j] = canvas;
+      j++;
+      if (j === 4) {
+        j = 0;
+        i++;
+        canvasMap[i] = {};
+      }
+      groupMap[getCanvasKey(canvas)] = [];
+    });
+    var count = 0;
+    Object.entries(this.props.treeData.nodes).forEach(nodeItem => {
+      const node = nodeItem[1];
+      const base = this.refs[nodeItem[0]].getImage();
+      if (base) {
+        const img = this.getSpriteSheet(base.filename);
+        var w = base.coords.w;
+        var h = base.coords.h;
+        const x = node.x - w - this.props.treeData.min_x + 500;
+        var y = node.y - h - this.props.treeData.min_y + 500;
+
+        h *= 2;
+        w *= 2;
+
+        count += mapObject(img, x, y, w, h, tileW, tileH, canvasMap, groupMap, base.coords.x, base.coords.y);
+      }
+    });
+    console.log("graphed " + count + " node draws");
+
+    count = 0;
+    canvases.forEach(canvas => {
+      const cx = parseInt(canvas.style.left, 10);
+      const cy = parseInt(canvas.style.top, 10);
+      const ctx = canvas.getContext("2d");
+      groupMap[getCanvasKey(canvas)].forEach(info => {
+        count++;
+        ctx.drawImage(info.img,
+          info.bx,
+          info.by,
+          info.w / 2,
+          info.h / 2,
+          info.x - cx,
+          info.y - cy,
+          info.w,
+          info.h
+        );
+      });
+    });
+    console.log("performed " + count + " node draws");
+  }
+
+  componentDidUpdate() {
+   console.log("nodemap update");
+    if (this.state.spriteSheetCount === this.state.spriteSheetLoaded) {
+      this.drawNodeMap();
+    }
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+     return this.state.spriteSheetCount === nextState.spriteSheetLoaded;
+  }
+
+  handleSpriteSheetLoad = () => {
+   console.log("spritesheet loaded!");
+    var state = this.state;
+    state.spriteSheetLoaded++;
+    this.setState(state);
+  }
+  handleSpriteSheetError = () => {
+    var state = this.state;
+    state.spriteSheetLoaded++;
+    this.setState(state);
+  }
+
   render() {
     console.log("nodemap render");
-    if (this.state.treeData && Object.entries(this.state.nodes).length) {
-      var nodes = [];
-      var sprites = [];
-      var map = {};
+    var nodes = [];
+    var sprites = [];
+    var map = {};
 
-      Object.values(this.state.treeData.skillSprites).forEach(spriteSheet => {
-        var maxZoom = spriteSheet[Object.values(spriteSheet).length - 1];
-        var filename = this.state.treeData.imageRoot + "build-gen/passive-skill-sprite/" + maxZoom.filename;
-        if (!map[filename]) {
-          map[filename] = sprites.push(<img alt="" src={filename} style={{display: 'none'}} ref={filename} key={filename} />);
-        }
-      });
+    Object.values(this.props.treeData.skillSprites).forEach(spriteSheet => {
+      var maxZoom = spriteSheet[Object.values(spriteSheet).length - 1];
+      var filename = this.props.treeData.imageRoot + "build-gen/passive-skill-sprite/" + maxZoom.filename;
+      if (!map[filename]) {
+        map[filename] = sprites.push(<img alt="" src={filename} style={{display: 'none'}}
+          ref={filename} key={filename}
+          onLoad={this.handleSpriteSheetLoad}
+          onError={this.handleSpriteSheetError}/>);
+      }
+    });
 
-      Object.entries(this.state.nodes).forEach(node => {
-         nodes.push(<Node node={node[1]} treeData={this.state.treeData} ref={node[0]} key={node[0]} getCanvasMap={this.getCanvasMap} getSpriteSheet={this.getSpriteSheet} />);
-      });
-      //var node = Object.entries(this.state.nodes)[1];
-      //console.log(node);
-      //nodes.push(<Node node={node[1]} treeData={this.state.treeData} ref={node[0]} key={node[0]} getCanvasMap={this.getCanvasMap} getSpriteSheet={this.getSpriteSheet} />);
-      
+    if (this.state.spriteSheetCount !== this.state.spriteSheetLoaded) {
       return(
-       <Fragment>
-        {sprites}
-        <CanvasMap width={this.state.width + 1000} height={this.state.height + 1000} name="NodeMapCanvasMap" ref="NodeMapCanvasMap" />
-        {nodes}
-       </Fragment>
+        <Fragment>
+          {sprites}
+        </Fragment>
       );
-    } else {
-      return(null);
     }
+    Object.entries(this.state.nodes).forEach(node => {
+       nodes.push(<Node node={node[1]} treeData={this.props.treeData}
+         ref={node[0]} key={node[0]} getCanvasMap={this.getCanvasMap} getSpriteSheet={this.getSpriteSheet} />);
+    });
+    //var node = Object.entries(this.state.nodes)[1];
+    //console.log(node);
+    //nodes.push(<Node node={node[1]} treeData={this.props.treeData} ref={node[0]} key={node[0]} getCanvasMap={this.getCanvasMap} getSpriteSheet={this.getSpriteSheet} />);
+    console.log("created nodes");
+    return(
+     <Fragment>
+      {sprites}
+      <CanvasMap width={this.props.width + 1000} height={this.props.height + 1000} name="NodeMapCanvasMap" ref="NodeMapCanvasMap" />
+      {nodes}
+     </Fragment>
+    );
   }
 }
 

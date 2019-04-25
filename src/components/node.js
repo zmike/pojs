@@ -170,38 +170,8 @@ class Node extends Component {
     this.nodeUpdate();
   }
 
-  componentDidUpdate() {
-    if (!this.state.base) {
-      return;
-    }
-    var getCanvases = this.props.getCanvasMap().getCanvases;
-    const base = this.state.base;
-    const xCoord = Math.round((this.props.node.x - base.coords.w)) - this.props.treeData.min_x + 500;
-    const yCoord = Math.round((this.props.node.y - base.coords.h)) - this.props.treeData.min_y + 500;
-    var canvases = getCanvases(xCoord, yCoord,
-      this.state.base.coords.w * 2, this.state.base.coords.h * 2);
-    var that = this;
-    if (!canvases.length) {
-      console.error(xCoord, yCoord,
-      this.state.base.coords.w * 2, this.state.base.coords.h * 2);
-    }
-    canvases.forEach(function(canvas) {
-      const x = parseInt(canvas.style.left, 10);
-      const y = parseInt(canvas.style.top, 10);
-
-      const ctx = canvas.getContext("2d")
-      const img = that.props.getSpriteSheet(base.filename);
-      ctx.drawImage(img,
-        base.coords.x,
-        base.coords.y,
-        base.coords.w,
-        base.coords.h,
-        xCoord - x,
-        yCoord - y,
-        2 * base.coords.w,
-        2 * base.coords.h
-      );
-    });
+  getImage = () => {
+    return this.state.base;
   }
 
   render() {
