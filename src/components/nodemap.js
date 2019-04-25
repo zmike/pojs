@@ -6,6 +6,7 @@ import {getCanvasKey, mapObject} from '../utils';
 class NodeMap extends Component {
   state = {
     nodes: {},
+    spriteSheets: {},
     spriteSheetCount: 0,
     spriteSheetLoaded: 0,
   };
@@ -144,7 +145,22 @@ class NodeMap extends Component {
     });
     console.log(Object.keys(nodeMap).length + " nodes");
 
+    var imageMap = {};
+
+    Object.values(this.props.treeData.skillSprites).forEach(spriteSheet => {
+      var maxZoom = spriteSheet[Object.values(spriteSheet).length - 1];
+      var filename = this.props.treeData.imageRoot + "build-gen/passive-skill-sprite/" + maxZoom.filename;
+      if (!imageMap[filename]) {
+          var img = new Image();
+          imageMap[filename] = img;
+          img.onload = this.handleSpriteSheetLoad;
+          img.onerror = this.handleSpriteSheetError;
+          img.src=filename;
+      }
+    });
+
     state.nodes = nodeMap;
+    state.spriteSheets = imageMap;
     state.spriteSheetCount = Object.values(spriteSheets).length;
     console.log("detected " + state.spriteSheetCount + " spritesheets");
     this.setState(state);
@@ -155,7 +171,7 @@ class NodeMap extends Component {
   }
 
   getSpriteSheet = (name) => {
-     return this.refs[name];
+     return this.state.spriteSheets[name];
   }
 
   getCanvasMap = () => {
@@ -248,27 +264,7 @@ class NodeMap extends Component {
   render() {
     console.log("nodemap render");
     var nodes = [];
-    var sprites = [];
-    var map = {};
 
-    Object.values(this.props.treeData.skillSprites).forEach(spriteSheet => {
-      var maxZoom = spriteSheet[Object.values(spriteSheet).length - 1];
-      var filename = this.props.treeData.imageRoot + "build-gen/passive-skill-sprite/" + maxZoom.filename;
-      if (!map[filename]) {
-        map[filename] = sprites.push(<img alt="" src={filename} style={{display: 'none'}}
-          ref={filename} key={filename}
-          onLoad={this.handleSpriteSheetLoad}
-          onError={this.handleSpriteSheetError}/>);
-      }
-    });
-
-    if (this.state.spriteSheetCount !== this.state.spriteSheetLoaded) {
-      return(
-        <Fragment>
-          {sprites}
-        </Fragment>
-      );
-    }
     Object.entries(this.state.nodes).forEach(node => {
        nodes.push(<Node node={node[1]} treeData={this.props.treeData}
          ref={node[0]} key={node[0]} getCanvasMap={this.getCanvasMap} getSpriteSheet={this.getSpriteSheet} />);
@@ -279,7 +275,6 @@ class NodeMap extends Component {
     console.log("created nodes");
     return(
      <Fragment>
-      {sprites}
       <CanvasMap width={this.props.width + 1000} height={this.props.height + 1000} name="NodeMapCanvasMap" ref="NodeMapCanvasMap" />
       {nodes}
      </Fragment>
