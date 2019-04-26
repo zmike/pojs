@@ -10,6 +10,10 @@ class Tree extends Component {
     ascendency: null,
     width: 0,
     height: 0,
+    assetMap: {},
+    assetMapByUrl: {},
+    assetsLoaded: 0,
+    assetCount: 0,
   };
 
   handleWheel = (event) => {
@@ -36,6 +40,23 @@ class Tree extends Component {
 
   handleLoad = () => {
      this.refs.canvasdiv.addEventListener("wheel", this.handleWheel, {passive: false});
+  }
+
+
+  shouldComponentUpdate(nextProps, nextState) {
+     return this.state.assetCount === nextState.assetsLoaded;
+  }
+
+  handleAssetLoad = () => {
+    var state = this.state;
+    state.assetsLoaded++;
+    this.setState(state);
+  }
+
+  handleAssetError = () => {
+    var state = this.state;
+    state.assetsLoaded++;
+    this.setState(state);
   }
 
   componentDidMount() {
@@ -65,14 +86,40 @@ class Tree extends Component {
           const width = treedata.max_x - treedata.min_x;
           const height = treedata.max_y - treedata.min_y;
 
+          var assetMap = {};
+          var assetMapByUrl = {};
+          var assetCount = 0;
+
+          Object.entries(treedata.assets).forEach(asset => {
+            var img = new Image();
+            img.src = asset[1][0.3835];
+            if (img.src === undefined) {
+              img.src = asset[1][1];
+            }
+            assetMap[asset[0]] = img;
+            assetMapByUrl[img.src] = img;
+            assetCount++;
+          });
+
           this.setState({
             treedata: treedata,
             ascendency: ascendency,
+            assetMap: assetMap,
+            assetMapByUrl: assetMapByUrl,
+            assetCount: assetCount,
+            assetsLoaded: 0,
             width: width,
             height: height,
           });
         });
       });
+  }
+  getAsset = (name) => {
+    return this.state.assetMap[name];
+  }
+
+  getAssetByUrl = (url) => {
+    return this.state.assetMapByUrl[url];
   }
 
   render() {
@@ -92,10 +139,10 @@ class Tree extends Component {
         */}
       <GroupMap ref="groupMap" style={{position: "absolute"}}
         treeData={this.state.treedata} ascendencyData={this.state.ascendency}
-        width={this.state.width} height={this.state.height}/>
+        width={this.state.width} height={this.state.height} getAsset={this.getAsset} getAssetByUrl={this.getAssetByUrl}/>
       <NodeMap ref="nodeMap" style={{position: "absolute"}}
         treeData={this.state.treedata} ascendencyData={this.state.ascendency}
-        width={this.state.width} height={this.state.height}/>
+        width={this.state.width} height={this.state.height} getAsset={this.getAsset} getAssetByUrl={this.getAssetByUrl}/>
      </div>
     );
   }

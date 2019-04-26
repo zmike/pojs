@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 //import AssetImage from "./assetimage";
+import { getNodeType } from '../utils';
 
 class Node extends Component {
   constructor(props) {
@@ -7,20 +8,7 @@ class Node extends Component {
 
     var state = {};
 
-    if (this.props.node.spc[0]) {
-      state.type = "ClassStart"
-    } else if (this.props.node.isAscendancyStart) {
-      state.type = "AscendClassStart"
-    } else if (this.props.node.m) {
-      state.type = "Mastery"
-    } else if (this.props.node.isJewelSocket) {
-      state.type = "Socket"
-    } else if (this.props.node.ks) {
-      state.type = "Keystone"
-    } else if (this.props.node["not"]) {
-      state.type = "Notable"
-    } else
-      state.type = "Normal"
+    state.type = getNodeType(this.props.node);
 /*
       //Parse node modifier lines
       node.mods = { }
@@ -165,6 +153,10 @@ class Node extends Component {
     state.z = z;
     this.setState(state);
   }
+
+  getType = () => {
+    return this.state.type;
+  }
   
   componentDidMount() {
     this.nodeUpdate();
@@ -172,6 +164,10 @@ class Node extends Component {
 
   getImage = () => {
     return this.state.base;
+  }
+
+  isAllocated = () => {
+    return this.state.alloc;
   }
 
   render() {

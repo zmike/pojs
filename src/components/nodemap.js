@@ -1,7 +1,7 @@
 import React, { Component, Fragment } from 'react';
 import Node from './node';
 import CanvasMap from './canvasmap';
-import {getCanvasKey, mapObject} from '../utils';
+import {getCanvasKey, getNodeType, mapObject} from '../utils';
 
 class NodeMap extends Component {
   state = {
@@ -13,7 +13,7 @@ class NodeMap extends Component {
 
   buildNodeMap() {
     var state = this.state;
-    console.log("assembling class map", this.props.ascendencyData);
+    console.log("assembling class map");
     var ascendNameMap = {};
     Object.values(this.props.ascendencyData).forEach(classObj => {
       classObj.classes[0] = {
@@ -60,7 +60,7 @@ class NodeMap extends Component {
       "centertemplar",
       "centershadow"
     ];
-    var nodeOverlay = {
+    const nodeOverlay = {
       Normal: {
         artWidth: 40,
         alloc: "PSSkillFrameActive",
@@ -103,6 +103,7 @@ class NodeMap extends Component {
     var sockets = {};
     var keystoneMap = {};
     Object.values(this.props.treeData.nodes).forEach(node => {
+      const nodeType = getNodeType(node)
       if (node.spc[0]) {
          const classObj = this.props.ascendencyData[node.spc[0]];
          classObj.startNodeId = node.id
@@ -120,12 +121,12 @@ class NodeMap extends Component {
         spriteMap[node.icon] = { }
       }
       node.sprites = spriteMap[node.icon];
-      if (nodeOverlay[node.type]) {
-        node.overlay = nodeOverlay[node.type];
+      if (nodeOverlay[nodeType]) {
+        node.overlay = nodeOverlay[nodeType];
         node.rsq = node.overlay.rsq
         node.size = node.overlay.size
       } else {
-         node.overlay = {}
+         node.overlay = {};
       }
 
       var group = this.props.treeData.groups[node.g]
@@ -198,20 +199,31 @@ class NodeMap extends Component {
       groupMap[getCanvasKey(canvas)] = [];
     });
     var count = 0;
+    const startTime = new Date();
     Object.entries(this.props.treeData.nodes).forEach(nodeItem => {
       const node = nodeItem[1];
-      const base = this.refs[nodeItem[0]].getImage();
+      var base = this.refs[nodeItem[0]].getImage();
       if (base) {
-        const img = this.getSpriteSheet(base.filename);
-        var w = base.coords.w;
-        var h = base.coords.h;
+        var w, h, img, bx = 0, by = 0;
+        // socket
+        if (base.coords === undefined) {
+          img = this.props.getAssetByUrl(base[0.3835]);
+          w = img.naturalWidth;
+          h = img.naturalHeight;
+        } else {
+          img = this.getSpriteSheet(base.filename);
+          bx = base.coords.x;
+          by = base.coords.y;
+          w = base.coords.w;
+          h = base.coords.h;
+        }
         const x = node.x - w - this.props.treeData.min_x + 500;
-        var y = node.y - h - this.props.treeData.min_y + 500;
+        const y = node.y - h - this.props.treeData.min_y + 500;
 
         h *= 2;
         w *= 2;
 
-        count += mapObject(img, x, y, w, h, tileW, tileH, canvasMap, groupMap, base.coords.x, base.coords.y);
+        count += mapObject(img, x, y, w, h, tileW, tileH, canvasMap, groupMap, bx, by);
       }
     });
     console.log("graphed " + count + " node draws");
@@ -235,7 +247,8 @@ class NodeMap extends Component {
         );
       });
     });
-    console.log("performed " + count + " node draws");
+    const endTime = new Date();
+    console.log("performed " + count + " node draws in " + (endTime - startTime) / 1000 + "s");
   }
 
   componentDidUpdate() {

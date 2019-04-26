@@ -7,7 +7,6 @@ class TreeBackground extends Component {
      const ctx = canvas.getContext("2d", {alpha: false});
      const Background1 = this.refs.Background1
      var pat = ctx.createPattern(Background1, "repeat");
-     console.log("drawing");
      ctx.rect(0, 0, canvas.width, canvas.height);
      ctx.fillStyle = pat;
      ctx.fill();
