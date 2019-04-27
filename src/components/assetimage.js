@@ -14,8 +14,8 @@ class AssetImage extends Component {
     var top;
     width = Math.round(assetimage.naturalWidth * 2);
     height = Math.round(assetimage.naturalHeight * 2);
-    left = (2 * this.props.left) - this.props.treeData.min_x - width + 500;
-    top = (2 * this.props.top) - this.props.treeData.min_y - height + 500;
+    left = (2 * this.props.left) - this.props.treeData.min_x - width + 750;
+    top = (2 * this.props.top) - this.props.treeData.min_y - height + 750;
     var state = this.state;
     state.style = {
       position: 'absolute',

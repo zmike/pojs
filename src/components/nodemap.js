@@ -11,31 +11,32 @@ class NodeMap extends Component {
     spriteSheetLoaded: 0,
   };
 
-  buildNodeMap() {
+  constructor(props) {
+    super(props);
     var state = this.state;
     console.log("assembling class map");
     var ascendNameMap = {};
-    Object.values(this.props.ascendencyData).forEach(classObj => {
+    Object.values(props.ascendancyData).forEach(classObj => {
       classObj.classes[0] = {
         name: "None"
       };
-      Object.entries(classObj.classes).forEach(ascendency => {
-        ascendNameMap[ascendency[1].name] = {
-          ascendClassId: ascendency[0],
-          ascendClass: ascendency[1]
+      Object.entries(classObj.classes).forEach(ascendancy => {
+        ascendNameMap[ascendancy[1].name] = {
+          ascendClassId: ascendancy[0],
+          ascendClass: ascendancy[1]
         }
       });
     });
 
     var spriteMap = { }
     var spriteSheets = { }
-    Object.entries(this.props.treeData.skillSprites).forEach(skillSprite => {
+    Object.entries(props.treeData.skillSprites).forEach(skillSprite => {
       var maxZoom = skillSprite[1][Object.values(skillSprite[1]).length - 1]
       var sheet;
       
       if (!spriteSheets[maxZoom.filename]) {
         sheet = {
-          filename: this.props.treeData.imageRoot + "build-gen/passive-skill-sprite/" + maxZoom.filename,
+          filename: props.treeData.imageRoot + "build-gen/passive-skill-sprite/" + maxZoom.filename,
         }
         spriteSheets[maxZoom.filename] = sheet;
       }
@@ -102,10 +103,10 @@ class NodeMap extends Component {
     var nodeMap = {};
     var sockets = {};
     var keystoneMap = {};
-    Object.values(this.props.treeData.nodes).forEach(node => {
+    Object.values(props.treeData.nodes).forEach(node => {
       const nodeType = getNodeType(node)
       if (node.spc[0]) {
-         const classObj = this.props.ascendencyData[node.spc[0]];
+         const classObj = props.ascendancyData[node.spc[0]];
          classObj.startNodeId = node.id
          node.startArt = classArt[node.spc[0] - 1]
       } else if (node.isAscendancyStart) {
@@ -126,10 +127,10 @@ class NodeMap extends Component {
         node.rsq = node.overlay.rsq
         node.size = node.overlay.size
       } else {
-         node.overlay = {};
+         node.overlay = null;
       }
 
-      var group = this.props.treeData.groups[node.g]
+      var group = props.treeData.groups[node.g]
       group.ascendancyName = node.ascendancyName
       if (node.isAscendancyStart) {
         group.isAscendancyStart = true
@@ -148,9 +149,9 @@ class NodeMap extends Component {
 
     var imageMap = {};
 
-    Object.values(this.props.treeData.skillSprites).forEach(spriteSheet => {
+    Object.values(props.treeData.skillSprites).forEach(spriteSheet => {
       var maxZoom = spriteSheet[Object.values(spriteSheet).length - 1];
-      var filename = this.props.treeData.imageRoot + "build-gen/passive-skill-sprite/" + maxZoom.filename;
+      var filename = props.treeData.imageRoot + "build-gen/passive-skill-sprite/" + maxZoom.filename;
       if (!imageMap[filename]) {
           var img = new Image();
           imageMap[filename] = img;
@@ -164,11 +165,7 @@ class NodeMap extends Component {
     state.spriteSheets = imageMap;
     state.spriteSheetCount = Object.values(spriteSheets).length;
     console.log("detected " + state.spriteSheetCount + " spritesheets");
-    this.setState(state);
-  }
-
-  componentDidMount() {
-    this.buildNodeMap();
+    this.state = state;
   }
 
   getSpriteSheet = (name) => {
@@ -203,6 +200,7 @@ class NodeMap extends Component {
     Object.entries(this.props.treeData.nodes).forEach(nodeItem => {
       const node = nodeItem[1];
       var base = this.refs[nodeItem[0]].getImage();
+      var x, y;
       if (base) {
         var w, h, img, bx = 0, by = 0;
         // socket
@@ -217,13 +215,31 @@ class NodeMap extends Component {
           w = base.coords.w;
           h = base.coords.h;
         }
-        const x = node.x - w - this.props.treeData.min_x + 500;
-        const y = node.y - h - this.props.treeData.min_y + 500;
+        x = node.x - w - this.props.treeData.min_x + 750;
+        y = node.y - h - this.props.treeData.min_y + 750;
 
         h *= 2;
         w *= 2;
 
         count += mapObject(img, x, y, w, h, tileW, tileH, canvasMap, groupMap, bx, by);
+      }
+      var overlay = this.refs[nodeItem[0]].getOverlay();
+      if (overlay) {
+        const img = this.props.getAsset(overlay);
+        if (node.overlay) {
+          w = node.size;
+          h = node.size;
+        } else {
+          w = img.naturalWidth;
+          h = img.naturalHeight;
+        x = node.x - w - this.props.treeData.min_x + 750;
+        y = node.y - h - this.props.treeData.min_y + 750;
+        }
+        if (!node.overlay) {
+           w *= 2;
+           h *= 2;
+        }
+        count += mapObject(img, x, y, w, h, tileW, tileH, canvasMap, groupMap);
       }
     });
     console.log("graphed " + count + " node draws");
@@ -235,16 +251,25 @@ class NodeMap extends Component {
       const ctx = canvas.getContext("2d");
       groupMap[getCanvasKey(canvas)].forEach(info => {
         count++;
-        ctx.drawImage(info.img,
-          info.bx,
-          info.by,
-          info.w / 2,
-          info.h / 2,
-          info.x - cx,
-          info.y - cy,
-          info.w,
-          info.h
-        );
+        if (info.bx === undefined || info.by === undefined) {
+          ctx.drawImage(info.img,
+            Math.floor(info.x - cx),
+            Math.floor(info.y - cy),
+            Math.floor(info.w),
+            Math.floor(info.h)
+          );
+        } else {
+          ctx.drawImage(info.img,
+            Math.floor(info.bx),
+            Math.floor(info.by),
+            Math.floor(info.w / 2),
+            Math.floor(info.h / 2),
+            Math.floor(info.x - cx),
+            Math.floor(info.y - cy),
+            Math.floor(info.w),
+            Math.floor(info.h)
+          );
+        }
       });
     });
     const endTime = new Date();
@@ -288,7 +313,7 @@ class NodeMap extends Component {
     console.log("created nodes");
     return(
      <Fragment>
-      <CanvasMap width={this.props.width + 1000} height={this.props.height + 1000} name="NodeMapCanvasMap" ref="NodeMapCanvasMap" />
+      <CanvasMap width={this.props.width + 1500} height={this.props.height + 1500} name="NodeMapCanvasMap" ref="NodeMapCanvasMap" />
       {nodes}
      </Fragment>
     );

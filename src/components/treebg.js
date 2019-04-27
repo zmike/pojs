@@ -41,7 +41,7 @@ class TreeBackground extends Component {
       <Fragment>
         <img alt="" ref="Background1" src={this.props.Background1}
              style={{display: 'none'}} onLoad={this.handleLoad} onError={this.handleError} />
-        <CanvasMap width={this.props.width + 1000} height={this.props.height + 1000} name="TreeBackground" ref="TreeBackgroundCanvasMap" />
+        <CanvasMap width={this.props.width + 1500} height={this.props.height + 1500} name="TreeBackground" ref="TreeBackgroundCanvasMap" />
       </Fragment>
     );
   }

@@ -7,7 +7,7 @@ import TreeBackground from "./treebg"
 class Tree extends Component {
   state = {
     treedata: null,
-    ascendency: null,
+    ascendancy: null,
     width: 0,
     height: 0,
     assetMap: {},
@@ -22,7 +22,7 @@ class Tree extends Component {
 
        var style = this.refs.canvasdiv.style;
        var scale = this.scale;
-       var incr = scale >= 1.0 ? 0.1 : 0.02;
+       var incr = scale >= 1.0 ? 0.1 : 0.05;
        if (event.deltaY < 0) {
          // Zoom in
          scale += incr;
@@ -44,7 +44,7 @@ class Tree extends Component {
 
 
   shouldComponentUpdate(nextProps, nextState) {
-     return this.state.assetCount === nextState.assetsLoaded;
+     return this.state.assetCount > 0 && this.state.assetCount === nextState.assetsLoaded;
   }
 
   handleAssetLoad = () => {
@@ -81,7 +81,7 @@ class Tree extends Component {
           var opts_len = treeData.slice(start_opts, start_opts + end_opts).trimEnd()
             .length;
           const treedata = JSON.parse(treeData.slice(start_treedata, start_treedata + end_treedata));
-          const ascendency = JSON.parse(treeData.slice(start_opts, start_opts + opts_len - 1));
+          const ascendancy = JSON.parse(treeData.slice(start_opts, start_opts + opts_len - 1));
 
           const width = treedata.max_x - treedata.min_x;
           const height = treedata.max_y - treedata.min_y;
@@ -96,6 +96,8 @@ class Tree extends Component {
             if (img.src === undefined) {
               img.src = asset[1][1];
             }
+            img.onerror = this.handleAssetError;
+            img.onload = this.handleAssetLoad;
             assetMap[asset[0]] = img;
             assetMapByUrl[img.src] = img;
             assetCount++;
@@ -103,7 +105,7 @@ class Tree extends Component {
 
           this.setState({
             treedata: treedata,
-            ascendency: ascendency,
+            ascendancy: ascendancy,
             assetMap: assetMap,
             assetMapByUrl: assetMapByUrl,
             assetCount: assetCount,
@@ -135,13 +137,13 @@ class Tree extends Component {
         width={this.state.width} height={this.state.height}/>
       {/*
       <TreeClass ref="treeClass" curClassId="1" style={{position: "absolute"}}
-        treeData={this.state.treedata} ascendencyData={this.state.ascendency}/>
+        treeData={this.state.treedata} ascendancyData={this.state.ascendancy}/>
         */}
       <GroupMap ref="groupMap" style={{position: "absolute"}}
-        treeData={this.state.treedata} ascendencyData={this.state.ascendency}
+        treeData={this.state.treedata} ascendancyData={this.state.ascendancy}
         width={this.state.width} height={this.state.height} getAsset={this.getAsset} getAssetByUrl={this.getAssetByUrl}/>
       <NodeMap ref="nodeMap" style={{position: "absolute"}}
-        treeData={this.state.treedata} ascendencyData={this.state.ascendency}
+        treeData={this.state.treedata} ascendancyData={this.state.ascendancy}
         width={this.state.width} height={this.state.height} getAsset={this.getAsset} getAssetByUrl={this.getAssetByUrl}/>
      </div>
     );

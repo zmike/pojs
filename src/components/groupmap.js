@@ -7,7 +7,7 @@ class GroupMap extends Component {
     var asset = null;
 
     if (group.ascendancyName) {
-      const key = "Classes" + group.ascendencyName;
+      const key = "Classes" + group.ascendancyName;
       asset = this.props.treeData.assets[key];
     } else if (group.oo[3]) {
       asset = this.props.treeData.assets.PSGroupBackground3;
@@ -43,20 +43,23 @@ class GroupMap extends Component {
       }
       groupMap[getCanvasKey(canvas)] = [];
     });
-    console.log(canvasMap);
     var count = 0;
     const startTime = new Date();
     Object.entries(this.props.treeData.groups).forEach(groupItem => {
       const group = groupItem[1];
-      const filename = this.getImageUrl(group);
+
+      var filename = null;
+      if (!group.ascendancyName || group.isAscendancyStart) {
+        filename = this.getImageUrl(group);
+      }
       if (filename) {
         var img = this.props.getAssetByUrl(filename);
         var w = img.naturalWidth;
         var h = img.naturalWidth;
-        var x = group.x - w - this.props.treeData.min_x + 500;
-        var y = group.y - h - this.props.treeData.min_y + 500;
+        var x = group.x - w - this.props.treeData.min_x + 750;
+        var y = group.y - h - this.props.treeData.min_y + 750;
 
-        if (group.oo[3]) {
+        if (group.oo[3] && !group.isAscendancyStart) {
           y -= h / 4;
           x -= w / 4;
           h *= 1.25;
@@ -65,12 +68,21 @@ class GroupMap extends Component {
           h *= 2;
         }
         w *= 2;
-
+        if (group.isAscendancyStart) {
+          w *= 1.25;
+          h *= 1.25;
+          x -= img.naturalWidth / 4;
+          y -= img.naturalHeight / 4;
+        }
         count += mapObject(img, x, y, w, h, tileW, tileH, canvasMap, groupMap);
 
         if (group.oo[3]) {
           if (!didOffscreenDraw) {
             // do transform render in fbo for sampling
+            if (!w || !h) {
+              console.log(img);
+              throw new Error("invalid image size!");
+            }
             offscreenCanvas.width = w;
             offscreenCanvas.height = h;
             var ctx = offscreenCanvas.getContext("2d");
@@ -79,7 +91,7 @@ class GroupMap extends Component {
             ctx.drawImage(img, 0, 0, w, h);
             ctx.restore();
           }
-          count += mapObject(offscreenCanvas, x, y + h, w, h, tileW, tileH, canvasMap, groupMap);
+          //count += mapObject(offscreenCanvas, x, y + h, w, h, tileW, tileH, canvasMap, groupMap);
         }
       }
     });
@@ -94,7 +106,7 @@ class GroupMap extends Component {
          //if (!(cx < info.x + info.w && cy < info.y + info.h && cx + tileW > info.x && cy + tileH > info.y)) {
           //console.error("bug!", info);
         //}
-        ctx.drawImage(info.img, info.x - cx, info.y - cy, info.w, info.h);
+        ctx.drawImage(info.img, Math.floor(info.x - cx), Math.floor(info.y - cy), Math.floor(info.w), Math.floor(info.h));
       });
     });
     const endTime = new Date();
@@ -111,7 +123,7 @@ class GroupMap extends Component {
 
     return (
       <Fragment>
-        <CanvasMap width={this.props.width + 1000} height={this.props.height + 1000} name="GroupMap" ref="GroupMapCanvasMap" />
+        <CanvasMap width={this.props.width + 1500} height={this.props.height + 1500} name="GroupMap" ref="GroupMapCanvasMap" />
       </Fragment>
     );
   }

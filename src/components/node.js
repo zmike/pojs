@@ -143,7 +143,9 @@ class Node extends Component {
        } else {
          // Normal node (includes keystones && notables)
          base = this.props.node.sprites[this.state.type.toLowerCase() + (this.state.alloc ? "Active" : "Inactive")];
-         overlay = this.props.node.overlay[allocString + (this.props.node.ascendancyName ? "Ascend" : "")]
+         if (this.props.node.overlay) {
+           overlay = this.props.node.overlay[allocString + (this.props.node.ascendancyName ? "Ascend" : "")]
+         }
        }
        break;
     }
@@ -168,6 +170,10 @@ class Node extends Component {
 
   isAllocated = () => {
     return this.state.alloc;
+  }
+
+  getOverlay = () => {
+    return this.state.overlay;
   }
 
   render() {
